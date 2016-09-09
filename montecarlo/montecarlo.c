@@ -13,6 +13,12 @@ int all_dots_num = 0;
 double sum = 0.0;
 sem_t sem;
 
+void reset() {
+	good_dots_num = 0;
+	all_dots_num = 0;
+	sum = 0.0;
+}
+
 void* check_dot() {
 	sem_wait(&sem);
 	if(all_dots_num >= MAX_DOTS) {
@@ -24,7 +30,7 @@ void* check_dot() {
 	srand(time(NULL));
 	double x = (rand() % 314) / 100;
 	double y = (rand() % 100) / 100;
-	if(x <= sin(x)) { //TODO: not sure
+	if(y <= sin(x)) {
 		sem_wait(&sem);
 		++good_dots_num;
 		++all_dots_num;
@@ -66,10 +72,14 @@ int main(int argc, char** argv) {
 	sem_init(&sem, 0, 1);
 	FILE* fd = fopen(argv[1], 'w');
 	double worst_time = run(1);
+	double result = 3.14 * sum / good_dots_num;
+	reset();
+	fprintf(fd, "Result: %f", result); 
 	for(int i = 2; i <= MAX_THREADS; ++i) {
 		double time = run(i);
 		double accel = worst_time/time;
 		fprintf("%d:%f", i, accel);
+		reset();
 	}
 	fclose(fd);
 	sem_destroy(&sem);
