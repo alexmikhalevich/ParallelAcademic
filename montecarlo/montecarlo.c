@@ -27,7 +27,7 @@ void* check_dot() {
 		sem_wait(&sem);
 		if(all_dots_num >= MAX_DOTS) {
 			sem_post(&sem);
-			return NULL;
+			break;
 		}
 		sem_post(&sem);
 	
