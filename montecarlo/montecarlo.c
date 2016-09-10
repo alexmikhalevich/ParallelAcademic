@@ -11,39 +11,21 @@
 #define MAX_THREADS 12
 #define MAX_DOTS 1000000000
 
-int good_dots_num = 0;
-int all_dots_num = 0;
 double sum = 0.0;
 sem_t sem;
 
 void reset() {
-	good_dots_num = 0;
-	all_dots_num = 0;
 	sum = 0.0;
 }
 
-void* check_dot() {
-	while(true) {
-		sem_wait(&sem);
-		if(all_dots_num >= MAX_DOTS) {
-			sem_post(&sem);
-			break;
-		}
-		sem_post(&sem);
-	
-		srand(time(NULL));
-		double x = (rand() % 314) / 100;
-		double y = (rand() % 100) / 100;
+void* check_dot(void* _iterations) {
+	int* iterations = (int*)_iterations;
+	for(int i = 0; i < *iterations; ++i) {
+		double x = (double)(rand() % 314) / 100;
+		double y = (double)(rand() % 100) / 100;
 		if(y <= sin(x)) {
 			sem_wait(&sem);
-			++good_dots_num;
-			++all_dots_num;
 			sum += x * y;
-			sem_post(&sem);
-		}
-		else {
-			sem_wait(&sem);	
-			++all_dots_num;
 			sem_post(&sem);
 		}
 	}
@@ -53,13 +35,14 @@ void* check_dot() {
 double run(int threads_num) {
 	struct timespec begin, end;
 	double elapsed;
+	pthread_t threads[threads_num];
+	int iters = MAX_DOTS / threads_num;
+	for(int i = 0; i < threads_num; ++i) {
+		pthread_create(&threads[i], NULL, &check_dot, (void*)&iters);
+	}
 	if(clock_gettime(CLOCK_REALTIME, &begin) == -1) {
 		perror("Unable to get time");
 		exit(-1);
-	}
-	pthread_t threads[threads_num];
-	for(int i = 0; i < threads_num; ++i) {
-		pthread_create(&threads[i], NULL, &check_dot, NULL);
 	}
 	for(int i = 0; i < threads_num; ++i) {
 		pthread_join(threads[i], NULL);
@@ -68,7 +51,6 @@ double run(int threads_num) {
 		perror("Unable to get time");
 		exit(-1);
 	}
-	printf("threads = %d\ngood_dots_num = %d, all_dots_num = %d, sum = %f\n\n", threads_num, good_dots_num, all_dots_num, sum);
 	elapsed = end.tv_sec - begin.tv_sec;
 	elapsed += (end.tv_nsec - begin.tv_nsec) / 1000000000.0;
 	return elapsed;
@@ -85,13 +67,14 @@ int main(int argc, char** argv) {
 		perror("Unable to open file");
 		exit(-1);
 	}
+	srand(time(NULL));
 	double worst_time = run(1);
-	double result = 3.14 * sum / good_dots_num;
+	double result = (3.14 / MAX_DOTS) * sum;
 	reset();
 	fprintf(fd, "Result: %f\n", result); 
 	for(int i = 2; i <= MAX_THREADS; ++i) {
 		double time = run(i);
-		double accel = worst_time/time;
+		double accel = time / worst_time;
 		fprintf(fd, "%d:%f\n", i, accel);
 		reset();
 	}
