@@ -13,7 +13,7 @@
 #include <string.h>
 
 #define MAX_THREADS 12
-#define MAX_DOTS 10000
+#define MAX_DOTS 1000000000
 
 double sum = 0.0;
 sem_t sem;
