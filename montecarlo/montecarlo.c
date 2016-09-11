@@ -13,7 +13,7 @@
 #include <string.h>
 
 #define MAX_THREADS 12
-#define MAX_DOTS 1000000000
+#define MAX_DOTS 100000000
 
 double sum = 0.0;
 sem_t sem;
@@ -24,9 +24,10 @@ void reset() {
 
 void* check_dot(void* _iterations) {
 	int* iterations = (int*)_iterations;
+	unsigned int seed = rand();
 	for(int i = 0; i < *iterations; ++i) {
-		double x = (double)(rand() % 314) / 100;
-		double y = (double)(rand() % 100) / 100;
+		double x = (double)(rand_r(&seed) % 314) / 100;
+		double y = (double)(rand_r(&seed) % 100) / 100;
 		if(y <= sin(x)) {
 			sem_wait(&sem);
 			sum += x * y;
@@ -38,10 +39,11 @@ void* check_dot(void* _iterations) {
 
 void* check_dots_advanced(void* _iterations) {
 	int* iterations = (int*)_iterations;
+	unsigned int seed = rand();
 	double* res = (double*)malloc(sizeof(double));
 	for(int i = 0; i < *iterations; ++i) {
-		double x = (double)(rand() % 314) / 100;
-		double y = (double)(rand() % 100) / 100;
+		double x = (double)(rand_r(&seed) % 314) / 100;
+		double y = (double)(rand_r(&seed) % 100) / 100;
 		if(y <= sin(x)) *res += x * y;
 	}
 	pthread_exit((void*)res);
@@ -103,13 +105,15 @@ int main(int argc, char** argv) {
 	}
 	srand(time(NULL));
 	double worst_time = run(1, advanced);
+	fprintf(fd, "1:%f\n", worst_time);
+	printf("Number of threads: 1, working time: %f s\n", worst_time);
 	double result = (3.14 / MAX_DOTS) * sum;
 	reset();
 	fprintf(fd, "Result: %f\n", result); 
 	for(int i = 2; i <= MAX_THREADS; ++i) {
 		double time = run(i, advanced);
-		double accel = time / worst_time;
-		fprintf(fd, "%d:%f\n", i, accel);
+		printf("Number of threads: %d, working time: %f s\n", i, time);
+		fprintf(fd, "%d:%f\n", i, time);
 		reset();
 	}
 	fclose(fd);
