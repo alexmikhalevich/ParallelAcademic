@@ -24,7 +24,7 @@ void reset() {
 
 void* check_dot(void* _iterations) {
 	int* iterations = (int*)_iterations;
-	unsigned int seed = rand();
+	unsigned int seed = time(NULL);
 	for(int i = 0; i < *iterations; ++i) {
 		double x = (double)(rand_r(&seed) % 314) / 100;
 		double y = (double)(rand_r(&seed) % 100) / 100;
@@ -39,7 +39,7 @@ void* check_dot(void* _iterations) {
 
 void* check_dots_advanced(void* _iterations) {
 	int* iterations = (int*)_iterations;
-	unsigned int seed = rand();
+	unsigned int seed = time(NULL);
 	double* res = (double*)malloc(sizeof(double));
 	for(int i = 0; i < *iterations; ++i) {
 		double x = (double)(rand_r(&seed) % 314) / 100;
@@ -50,7 +50,6 @@ void* check_dots_advanced(void* _iterations) {
 }
 
 double run(int threads_num, bool advanced) {
-	if(!advanced) sem_init(&sem, 0, 1);
 	struct timespec begin, end;
 	double elapsed;
 	pthread_t threads[threads_num];
@@ -76,7 +75,6 @@ double run(int threads_num, bool advanced) {
 		perror("Unable to get time");
 		exit(-1);
 	}
-	if(!advanced) sem_destroy(&sem);
 	elapsed = end.tv_sec - begin.tv_sec;
 	elapsed += (end.tv_nsec - begin.tv_nsec) / 1000000000.0;
 	return elapsed;
@@ -98,6 +96,7 @@ int main(int argc, char** argv) {
 		fprintf(stderr, "You should provide the name of the output file.\n");
 		exit(-1);
 	}
+	if(!advanced) sem_init(&sem, 0, 1);
 	FILE* fd = fopen(filename, "w");
 	if(!fd) {
 		perror("Unable to open file");
@@ -116,6 +115,7 @@ int main(int argc, char** argv) {
 		fprintf(fd, "%d:%f\n", i, time);
 		reset();
 	}
+	if(!advanced) sem_destroy(&sem);
 	fclose(fd);
 	return 0;
 }
