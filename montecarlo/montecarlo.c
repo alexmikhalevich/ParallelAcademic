@@ -25,15 +25,15 @@ void reset() {
 void* check_dot(void* _iterations) {
 	int* iterations = (int*)_iterations;
 	unsigned int seed = time(NULL);
+	double res = 0.0;
 	for(int i = 0; i < *iterations; ++i) {
 		double x = (double)(rand_r(&seed) % 314) / 100;
 		double y = (double)(rand_r(&seed) % 100) / 100;
-		if(y <= sin(x)) {
-			sem_wait(&sem);
-			sum += x * y;
-			sem_post(&sem);
-		}
+		if(y <= sin(x)) res += x * y;
 	}
+	sem_wait(&sem);
+	sum += res;
+	sem_post(&sem);
 	return NULL;
 }
 
