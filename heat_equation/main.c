@@ -106,8 +106,11 @@ void get_temp_distribution(struct s_plate* plate, size_t time) {
 int main(int argc, char** argv) {
 	size_t time = 0;
 	if(argc < 11) {
-		printf("Usage: ./a.out -h <plate height> -w <plate width> -u0 <initial temperature>");
-		printf("-ul <left boundary temperature> -ur <right boundary temperature>\n");
+		if(rank == 0) {
+			printf("Usage: ./a.out -h <plate height> -w <plate width> -u0 <initial temperature>");
+			printf("-ul <left boundary temperature> -ur <right boundary temperature>\n");
+		}
+		return 0;
 	}
 	for(size_t i = 1; i < argc; ++i) {
 		if(argv[i] == "-h") plate_height = atoi(argv[++i]);
@@ -119,7 +122,6 @@ int main(int argc, char** argv) {
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &process_num);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	//struct s_plate* plate_chunk;
 	size_t chunk = 0;
 	if(rank != process_num - 1) chunk = plate_width / process_num;
 	else chunk = plate_width / process_num + plate_width - (plate_width / process_num) * process_num;
