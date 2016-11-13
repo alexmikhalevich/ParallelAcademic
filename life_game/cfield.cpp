@@ -18,6 +18,7 @@ void CField::_init_state(State& state, size_t sizex, size_t sizey) {
 {
 #pragma omp for 
 #endif
+	state.resize(sizex);
 	for(size_t i = 0; i < sizex; ++i) {
 		state[i].resize(sizey);
 		for(size_t j = 0; j < sizey; j++) state[i][j] = false;

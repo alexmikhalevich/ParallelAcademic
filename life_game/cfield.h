@@ -1,7 +1,10 @@
 #include <vector>
 #include <fstream>
 #include <string>
+
+#ifdef MULTITHREAD
 #include <omp.h>
+#endif
 
 typedef std::vector<std::vector<bool>> State;
 
