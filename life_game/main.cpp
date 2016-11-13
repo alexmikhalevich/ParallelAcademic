@@ -3,6 +3,10 @@
 #include <iostream>
 #include "cfield.h"
 
+#ifdef MULTITHREAD
+#define MAX_THREADS 12
+#endif
+
 int main(int argc, char** argv) {
 	size_t time = 0;
 	if(argc < 3) {
@@ -12,13 +16,24 @@ int main(int argc, char** argv) {
 	for(int i = 1; i < argc; ++i) {
 		if(strcmp(argv[i], "--time") == 0 || strcmp(argv[i], "-t") == 0) time = atoi(argv[++i]);
 	}
-	CField* field = new CField("state.dat");
-	while(time != 0) {
-		field->step();
-		--time;
-	}
-	field->write_state("life.dat");
-	delete field;
 
+#ifdef MULTITHREAD
+	for(int i = 1; i < MAX_THREADS; ++i) {
+		omp_set_num_threads(i);
+		double begin, end;
+		begin = omp_get_wtime();
+#endif
+		CField* field = new CField("state.dat");
+		while(time != 0) {
+			field->step();
+			--time;
+		}
+		field->write_state("life.dat");
+		delete field;
+#ifdef MULTITHREAD
+		end = omp_get_wtime();
+		std::cout << "Num of threads: " << i << "; time: " << end - begin << std::endl;
+	}
+#endif
 	return 0;
 }
