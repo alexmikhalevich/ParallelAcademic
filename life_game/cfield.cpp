@@ -13,12 +13,12 @@ CField::CField(const std::string& input) {
 }
 
 void CField::_init_state(State& state, size_t sizex, size_t sizey) {
+	state.resize(sizex);
 #ifdef MULTITHREAD
 #pragma omp parallel 
 {
 #pragma omp for 
 #endif
-	state.resize(sizex);
 	for(size_t i = 0; i < sizex; ++i) {
 		state[i].resize(sizey);
 		for(size_t j = 0; j < sizey; j++) state[i][j] = false;
@@ -52,8 +52,8 @@ void CField::step() {
 #ifdef MULTITHREAD
 #pragma omp parallel
 {
-#pragma omp for
-#endif
+#pragma omp for 
+#endif 
 	for(size_t i = 0; i < m_state.size(); ++i) {
 		for(size_t j = 0; j < m_state[0].size(); ++j) {
 			size_t n = _neighbours(i, j);
