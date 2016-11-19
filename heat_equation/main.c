@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
 	if(argc < 11) {
 		if(rank == 0) {
 			printf("Usage: ./a.out -h <plate height> -w <plate width> -u0 <initial temperature>");
-			printf("-ul <left boundary temperature> -ur <right boundary temperature>\n");
+			printf("-ul <left boundary temperature> -ur <right boundary temperature> -t <time>\n");
 		}
 		return 0;
 	}
@@ -118,6 +118,7 @@ int main(int argc, char** argv) {
 		if(argv[i] == "-u0") u_0 = atof(argv[++i]);
 		if(argv[i] == "-ul") u_l = atof(argv[++i]);
 		if(argv[i] == "-ur") u_r = atof(argv[++i]);
+		if(argv[i] == "-t") time = atoi(argv[++i]);
 	}
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &process_num);
