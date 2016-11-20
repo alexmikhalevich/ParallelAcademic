@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define tau 1
 
@@ -98,27 +99,35 @@ void step(struct s_plate* plate) {
 }
 
 void get_temp_distribution(struct s_plate* plate, size_t time) {
-	for(size_t i = 0; i < plate->size; ++i) 
-		for(size_t j = 0; j < plate_height; ++j) plate->plate_chunk[i][j] = u_0;
+	for(size_t i = 0; i < plate->size; ++i) { 
+		for(size_t j = 0; j < plate_height; ++j) {
+			plate->plate_chunk[i][j] = u_0;
+			printf("rank = %d; plate_chunk = %f\n", rank, u_0);
+		}			
+	}
 	for(size_t t = 0; t < time; ++t) step(plate);
 }
 
 int main(int argc, char** argv) {
 	size_t time = 0;
+	double tmp_width, tmp_height;
 	if(argc < 11) {
 		if(rank == 0) {
 			printf("Usage: ./a.out -h <plate height> -w <plate width> -u0 <initial temperature>");
-			printf("-ul <left boundary temperature> -ur <right boundary temperature>\n");
+			printf("-ul <left boundary temperature> -ur <right boundary temperature> -t <time>\n");
 		}
 		return 0;
 	}
 	for(size_t i = 1; i < argc; ++i) {
-		if(argv[i] == "-h") plate_height = atoi(argv[++i]);
-		if(argv[i] == "-w") plate_width = atoi(argv[++i]);
-		if(argv[i] == "-u0") u_0 = atof(argv[++i]);
-		if(argv[i] == "-ul") u_l = atof(argv[++i]);
-		if(argv[i] == "-ur") u_r = atof(argv[++i]);
+		if(strcmp(argv[i], "-h") == 0) tmp_height = atof(argv[++i]);
+		if(strcmp(argv[i], "-w") == 0) tmp_width = atof(argv[++i]);
+		if(strcmp(argv[i], "-u0") == 0) u_0 = atof(argv[++i]);
+		if(strcmp(argv[i], "-ul") == 0) u_l = atof(argv[++i]);
+		if(strcmp(argv[i], "-ur") == 0) u_r = atof(argv[++i]);
+		if(strcmp(argv[i], "-t") == 0) time = atoi(argv[++i]);
 	}
+	plate_width = (size_t)(tmp_width * 100);
+	plate_height = (size_t)(tmp_height * 100);
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &process_num);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
