@@ -5,6 +5,7 @@
 #include <string.h>
 
 #define tau 1
+#define EPS 0.00001
 
 size_t plate_width = 0;
 size_t plate_height = 0;
@@ -37,7 +38,6 @@ void delete_plate(struct s_plate* plate) {
 }
 
 void substep(struct s_plate* last, struct s_plate* output) {
-	output = init_plate(last->size);
 	double* boundary_data = (double*)malloc(plate_height * sizeof(double));
 	for(size_t i = 1; i < last->size - 1; ++i) 
 		for(size_t j = 0; j < plate_height; ++j) 
@@ -81,7 +81,7 @@ void substep(struct s_plate* last, struct s_plate* output) {
 }
 
 void step(struct s_plate* plate) {
-	struct s_plate* v_plate;
+	struct s_plate* v_plate = init_plate(plate->size);
 	substep(plate, v_plate);
 	if(rank == 0)
 		for(size_t j = 0; j < plate_width; ++j) plate->plate_chunk[0][j] = u_l;
@@ -95,21 +95,22 @@ void step(struct s_plate* plate) {
 				(tmp_a - 2 * v_plate->plate_chunk[i][j] + tmp_b); 
 		}
 	}
-	delete_plate(v_plate);
+	if(v_plate != NULL) delete_plate(v_plate);
 }
 
-void get_temp_distribution(struct s_plate* plate, size_t time) {
-	for(size_t i = 0; i < plate->size; ++i) { 
-		for(size_t j = 0; j < plate_height; ++j) {
+void get_temp_distribution(struct s_plate* plate, double time) {
+	double elapsed = 0.0;
+	for(size_t i = 0; i < plate->size; ++i)
+		for(size_t j = 0; j < plate_height; ++j) 
 			plate->plate_chunk[i][j] = u_0;
-			printf("rank = %d; plate_chunk = %f\n", rank, u_0);
-		}			
-	}
-	for(size_t t = 0; t < time; ++t) step(plate);
+	do {
+		step(plate);
+		elapsed += tau;
+	} while(elapsed - time < EPS);
 }
 
 int main(int argc, char** argv) {
-	size_t time = 0;
+	double time = 0;
 	double tmp_width, tmp_height;
 	if(argc < 11) {
 		if(rank == 0) {
@@ -124,7 +125,7 @@ int main(int argc, char** argv) {
 		if(strcmp(argv[i], "-u0") == 0) u_0 = atof(argv[++i]);
 		if(strcmp(argv[i], "-ul") == 0) u_l = atof(argv[++i]);
 		if(strcmp(argv[i], "-ur") == 0) u_r = atof(argv[++i]);
-		if(strcmp(argv[i], "-t") == 0) time = atoi(argv[++i]);
+		if(strcmp(argv[i], "-t") == 0) time = atof(argv[++i]);
 	}
 	plate_width = (size_t)(tmp_width * 100);
 	plate_height = (size_t)(tmp_height * 100);
@@ -136,6 +137,12 @@ int main(int argc, char** argv) {
 	else chunk = plate_width / process_num + plate_width - (plate_width / process_num) * process_num;
 	struct s_plate* plate = init_plate(chunk);
 	get_temp_distribution(plate, time);
+	for(size_t i = 0; i < plate->size; ++i) {
+		for(size_t j = 0; j < plate_height; ++j) {
+			printf("%f\t", plate->plate_chunk[i][j]);
+		}
+		printf("\n");
+	}
 	delete_plate(plate);
 	MPI_Finalize();
 	return 0;
