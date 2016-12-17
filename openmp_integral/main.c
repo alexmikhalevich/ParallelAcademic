@@ -37,14 +37,14 @@ int main(int argc, char** argv)  {
 			}
 		}
 		else {
+			double tmp_res = 0.0;
 			#pragma omp parallel
 			{
-				#pragma omp for 
-				for(unsigned int i =  0; i < chunks; ++i) {
-					#pragma omp critical 
-					{
-						res += func(step * i);
-					}
+				#pragma omp for shared(tmp_res)
+				for(unsigned int i =  0; i < chunks; ++i) tmp_res += func(step * i);
+				#pragma omp critical 
+				{
+					res += func(step * i);
 				}
 			}
 		}
