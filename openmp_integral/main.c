@@ -38,9 +38,9 @@ int main(int argc, char** argv)  {
 		}
 		else {
 			double tmp_res = 0.0;
-			#pragma omp parallel
+			#pragma omp parallel private(tmp_res)
 			{
-				#pragma omp for shared(tmp_res)
+				#pragma omp for
 				for(unsigned int i =  0; i < chunks; ++i) tmp_res += func(step * i);
 				#pragma omp critical 
 				{
