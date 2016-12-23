@@ -26,6 +26,7 @@ int main(int argc, char** argv)  {
 
 	double step = 1 / (double)chunks;
 	double begin, end;
+	FILE* out_file = fopen("out.dat", "w+");
 	for(int i = 1; i < MAX_THREADS; ++i) {
 		begin = omp_get_wtime(); 
 		double res = 0.0;
@@ -52,8 +53,9 @@ int main(int argc, char** argv)  {
 		res *= 4 * step;
 		end = omp_get_wtime();
 		printf("Num of threads: %d, result: %f, time: %f\n", i, res, end - begin);
+		fprintf(out_file, "%d:%f\n", i, end - begin);
 	}
-
+	fclose(out_file);
 	return 0;
 }
 
